@@ -1,0 +1,46 @@
+version: '3'
+
+includes:
+  crossplane-with-upjet: crossplane-with-upjet/Taskfile.yaml
+  crossplane-with-ack: crossplane-with-ack/Taskfile.yaml
+  kro-with-ack: kro-with-ack/Taskfile.yaml
+  kro-with-upjet: kro-with-upjet/Taskfile.yaml
+
+tasks:
+  crossplane-with-upjet:
+    desc: Bootstrap crossplane with upjet
+    cmds:
+      - task: crossplane-with-upjet:bootstrap
+
+  crossplane-with-upjet-cleanup:
+    desc: Cleanup crossplane with upjet
+    cmds:
+      - task: crossplane-with-upjet:cleanup
+
+  crossplane-with-ack:
+    desc: Bootstrap crossplane with ack
+    cmds:
+      - task: crossplane-with-ack:bootstrap
+
+  crossplane-with-ack-cleanup:
+    desc: Cleanup crossplane with ack
+    cmds:
+      - task: crossplane-with-ack:cleanup
+
+  kro-with-ack:
+    desc: Bootstrap kro with ack
+    cmds:
+      - task: kro-with-ack:bootstrap
+  kro-with-ack-cleanup:
+    desc: Cleanup kro with ack
+    cmds:
+      - task: kro-with-ack:cleanup
+
+  kro-with-upjet:
+    desc: Bootstrap kro with upjet
+    cmds:
+      - task: kro-with-upjet:bootstrap
+  kro-with-upjet-cleanup:
+    desc: Cleanup kro with upjet
+    cmds:
+      - task:  kro-with-upjet:cleanup

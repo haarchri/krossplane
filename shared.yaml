@@ -1,0 +1,85 @@
+version: '3'
+
+vars:
+  CLUSTER_NAME: '{{ .CLUSTER_NAME | default "default-cluster"}}'
+  CROSSPLANE_NAMESPACE: '{{.CROSSPLANE_NAMESPACE | default "crossplane-system"}}'
+  CROSSPLANE_VERSION: '{{.CROSSPLANE_VERSION | default "v2.0.0-rc.0.74.gbeaba4735"}}'
+  KRO_NAMESPACE: '{{.KRO_NAMESPACE | default "kro"}}'
+  KRO_VERSION: '{{.KRO_VERSION | default "v0.1.0"}}'
+  CONTROLLER_NAMESPACE: '{{.CONTROLLER_NAMESPACE | default "ack-system"}}'
+  AWS_CREDENTIALS_PATH: '{{.AWS_CREDENTIALS_PATH | default "~/.aws/credentials"}}'
+  AWS_REGION: '{{.AWS_REGION | default "us-east-1"}}'
+
+tasks:
+  bootstrap-kind:
+    internal: true
+    desc: Create Kind cluster
+    cmds:
+      - |
+      - kind create cluster --name {{.CLUSTER_NAME}}
+      - kubectl cluster-info --context kind-{{.CLUSTER_NAME}}
+
+  bootstrap-crossplane:
+    internal: true
+    desc: Install Crossplane via Helm
+    cmds:
+      - helm repo add crossplane-master https://charts.crossplane.io/master
+      - helm repo update
+      - |
+        helm install crossplane \
+          --namespace {{.CROSSPLANE_NAMESPACE}} \
+          crossplane-master/crossplane \
+          --version={{.CROSSPLANE_VERSION}} \
+          --create-namespace \
+          --wait
+
+  bootstrap-kro:
+    internal: true
+    desc: Install Kro via Helm
+    cmds:
+      - |
+        helm install kro oci://ghcr.io/kro-run/kro/kro \
+          --namespace {{.KRO_NAMESPACE}} \
+          --create-namespace \
+          --version={{.KRO_VERSION}}
+
+  bootstrap-controllers-upjet:
+    internal: true
+    desc: Apply Upjet provider configurations
+    cmds:
+      - kubectl apply -f controllers/upjet/providers.yaml
+      - kubectl wait providers.pkg --all --for=condition=Healthy --timeout 5m
+      - kubectl wait providers.pkg --all --for=condition=Installed --timeout 5m
+      - kubectl wait providerrevisions.pkg --all --for=condition=RevisionHealthy --timeout 5m
+
+  bootstrap-controllers-ack:
+    internal: true
+    desc: Apply ACK controller configurations
+    cmds:
+      - |
+        export SERVICE=s3
+        export RELEASE_VERSION=$(curl -sL https://api.github.com/repos/aws-controllers-k8s/${SERVICE}-controller/releases/latest | jq -r '.tag_name | ltrimstr("v")')
+        helm install ack-$SERVICE-controller oci://public.ecr.aws/aws-controllers-k8s/$SERVICE-chart \
+          --namespace {{.CONTROLLER_NAMESPACE}} \
+          --create-namespace \
+          --version=$RELEASE_VERSION \
+          --set aws.region={{.AWS_REGION | default "us-east-1"}} \
+          --set aws.credentials.secretName=aws-creds \
+          --set aws.credentials.secretKey=credentials \
+          --set aws.credentials.profile=default \
+
+  bootstrap-aws-credentials:
+    internal: true
+    desc: Configure AWS credentials as Kubernetes secret
+    cmds:
+      - |
+        AWS_CREDS=$(cat {{.AWS_CREDENTIALS_PATH}})
+        kubectl -n {{.CONTROLLER_NAMESPACE}} create secret generic aws-creds \
+          --from-literal=credentials="$AWS_CREDS" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+  cleanup-kind:
+    internal: true
+    desc: Delete the Kind cluster
+    cmds:
+      - kind delete cluster --name {{.CLUSTER_NAME}}

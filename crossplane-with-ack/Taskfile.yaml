@@ -1,0 +1,38 @@
+version: '3'
+
+includes:
+  shared: ../shared.yaml
+
+tasks:
+  bootstrap:
+    desc: Bootstrap crossplane with ack
+    vars:
+      AWS_CREDENTIALS_PATH: "/Users/haarchri/.aws/aws.json"
+      CLUSTER_NAME: crossplane-with-ack
+      CROSSPLANE_VERSION: v2.0.0-rc.0.74.gbeaba4735
+      AWS_REGION: us-west-2
+      CROSSPLANE_NAMESPACE: crossplane-system
+      CONTROLLER_NAMESPACE: ack-system
+    cmds:
+      - task: shared:bootstrap-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"
+      - task: shared:bootstrap-crossplane
+        vars:
+          CROSSPLANE_VERSION: "{{.CROSSPLANE_VERSION}}"
+          CROSSPLANE_NAMESPACE: "{{.CROSSPLANE_NAMESPACE}}"
+      - task: shared:bootstrap-controllers-ack
+        vars:
+          AWS_REGION: "{{.AWS_REGION}}"
+          CONTROLLER_NAMESPACE: "{{.CONTROLLER_NAMESPACE}}"
+      - task: shared:bootstrap-aws-credentials
+        vars:
+          AWS_CREDENTIALS_PATH: "{{.AWS_CREDENTIALS_PATH}}"
+  cleanup:
+    desc: Cleanup kind cluster
+    vars:
+      CLUSTER_NAME: crossplane-with-ack
+    cmds:
+      - task: shared:cleanup-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"

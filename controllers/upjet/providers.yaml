@@ -1,0 +1,14 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-contrib-provider-aws-s3
+spec:
+  package: xpkg.crossplane.io/crossplane-contrib/provider-aws-s3:v1.23.0-crossplane-v2-preview.0
+  skipDependencyResolution: true
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-contrib-provider-family-aws
+spec:
+  package: xpkg.crossplane.io/crossplane-contrib/provider-family-aws:v1.23.0-crossplane-v2-preview.0

@@ -1,0 +1,37 @@
+version: '3'
+
+includes:
+  shared: ../shared.yaml
+
+tasks:
+  bootstrap:
+    desc: Bootstrap crossplane with upjet
+    vars:
+      AWS_CREDENTIALS_PATH: "/Users/haarchri/.aws/aws.json"
+      CLUSTER_NAME: crossplane-with-upjet
+      CROSSPLANE_VERSION: v2.0.0-rc.0.74.gbeaba4735
+      CROSSPLANE_NAMESPACE: crossplane-system
+      CONTROLLER_NAMESPACE: crossplane-system
+    cmds:
+      - task: shared:bootstrap-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"
+      - task: shared:bootstrap-crossplane
+        vars:
+          CROSSPLANE_VERSION: "{{.CROSSPLANE_VERSION}}"
+          CROSSPLANE_NAMESPACE: "{{.CROSSPLANE_NAMESPACE}}"
+      - task: shared:bootstrap-controllers-upjet
+        vars:
+          CONTROLLER_NAMESPACE: "{{.CONTROLLER_NAMESPACE}}"
+      - task: shared:bootstrap-aws-credentials
+        vars:
+          AWS_CREDENTIALS_PATH: "{{.AWS_CREDENTIALS_PATH}}"
+          CONTROLLER_NAMESPACE: "{{.CONTROLLER_NAMESPACE}}"
+  cleanup:
+    desc: Cleanup kind cluster
+    vars:
+      CLUSTER_NAME: crossplane-with-upjet
+    cmds:
+      - task: shared:cleanup-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"

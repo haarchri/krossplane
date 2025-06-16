@@ -1,0 +1,36 @@
+
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: storagebuckets.krossplane.cloud
+spec:
+  schema:
+    apiVersion: v1alpha1
+    group: krossplane.cloud
+    kind: StorageBucket
+    spec:
+      parameters:
+        region: string | default="us-west-1"
+        enableACLs: boolean | default=false
+        versioning: boolean | default=true
+        acl: string | default="private" | optional
+        objectOwnership: string | default="BucketOwnerEnforced"
+  resources:
+    - id: bucket
+      template:
+        apiVersion: s3.services.k8s.aws/v1alpha1
+        kind: Bucket
+        metadata:
+          name: ${schema.metadata.name}
+          annotations:
+            services.k8s.aws/region: ${schema.spec.parameters.region}
+        spec:
+          name: ${schema.metadata.name}
+          createBucketConfiguration:
+            locationConstraint: ${schema.spec.parameters.region}
+          versioning:
+            status: '${schema.spec.parameters.versioning == true ? "Enabled" : "Suspended"}'
+          ownershipControls:
+            rules:
+            - objectOwnership: ${schema.spec.parameters.objectOwnership}
+          acl: '${schema.spec.parameters.enableACLs == true && schema.spec.parameters.objectOwnership != "BucketOwnerEnforced" ? schema.spec.parameters.acl : ""}'

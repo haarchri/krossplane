@@ -1,0 +1,42 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: kcl-bucket
+  labels:
+    language: kcl
+spec:
+  compositeTypeRef:
+    apiVersion: krossplane.cloud/v1alpha1
+    kind: StorageBucket
+  mode: Pipeline
+  pipeline:
+  - step: normal
+    functionRef:
+      name: crossplane-contrib-function-kcl
+    input:
+      apiVersion: krm.kcl.dev/v1alpha1
+      kind: KCLInput
+      spec:
+        source: |
+          oxr = option("params").oxr
+
+          _items = [
+              {
+                  apiVersion = "s3.aws.m.upbound.io/v1beta1"
+                  kind = "Bucket"
+                  metadata = {
+                      name = oxr.spec.id
+                      annotations = {
+                          "crossplane.io/external-name": oxr.metadata.name
+                          "krm.kcl.dev/composition-resource-name" = "bucket"
+                      }
+                  }
+                  spec = {
+                      forProvider = {
+                          region = oxr.spec.parameters.region
+                      }
+                  }
+              }
+          ]
+
+          items = _items

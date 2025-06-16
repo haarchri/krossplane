@@ -1,0 +1,31 @@
+version: '3'
+
+includes:
+  shared: ../shared.yaml
+
+tasks:
+  bootstrap:
+    desc: Bootstrap kro with upjet
+    vars:
+      AWS_CREDENTIALS_PATH: "/Users/haarchri/.aws/aws.json"
+      CLUSTER_NAME: kro-with-upjet
+      KRO_VERSION: 0.3.0
+      KRO_NAMESPACE: kro
+      AWS_REGION: us-west-2
+      CONTROLLER_NAMESPACE: crossplane-system
+    cmds:
+      - task: shared:bootstrap-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"
+      - task: shared:bootstrap-kro
+        vars:
+          KRO_VERSION: "{{.KRO_VERSION}}"
+          KRO_NAMESPACE: "{{.KRO_NAMESPACE}}"
+  cleanup:
+    desc: Cleanup kind cluster
+    vars:
+      CLUSTER_NAME: kro-with-upjet
+    cmds:
+      - task: shared:cleanup-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"

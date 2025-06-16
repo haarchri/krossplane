@@ -1,0 +1,38 @@
+version: '3'
+
+includes:
+  shared: ../shared.yaml
+
+tasks:
+  bootstrap:
+    desc: Bootstrap kro with ack
+    vars:
+      AWS_CREDENTIALS_PATH: "/Users/haarchri/.aws/aws.json"
+      CLUSTER_NAME: kro-with-ack
+      KRO_VERSION: 0.3.0
+      KRO_NAMESPACE: kro
+      AWS_REGION: us-west-2
+      CONTROLLER_NAMESPACE: ack-system
+    cmds:
+      - task: shared:bootstrap-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"
+      - task: shared:bootstrap-kro
+        vars:
+          KRO_VERSION: "{{.KRO_VERSION}}"
+          KRO_NAMESPACE: "{{.KRO_NAMESPACE}}"
+      - task: shared:bootstrap-controllers-ack
+        vars:
+          AWS_REGION: "{{.AWS_REGION}}"
+          CONTROLLER_NAMESPACE: "{{.CONTROLLER_NAMESPACE}}"
+      - task: shared:bootstrap-aws-credentials
+        vars:
+          AWS_CREDENTIALS_PATH: "{{.AWS_CREDENTIALS_PATH}}"
+  cleanup:
+    desc: Cleanup kind cluster
+    vars:
+      CLUSTER_NAME: kro-with-ack
+    cmds:
+      - task: shared:cleanup-kind
+        vars:
+          CLUSTER_NAME: "{{.CLUSTER_NAME}}"

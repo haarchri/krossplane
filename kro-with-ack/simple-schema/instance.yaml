@@ -1,0 +1,10 @@
+apiVersion: krossplane.cloud/v1alpha1
+kind: StorageBucket
+metadata:
+  name: kro-with-ack-simple-schema
+  namespace: default
+spec:
+  parameters:
+    region: us-west-1
+    versioning: true
+    acl: public-read
